@@ -1,7 +1,6 @@
 # AWS Msk Kafka Cluster
 
-[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/angelabad/terraform-aws-msk-cluster)](https://github.com/angelabad/terraform-aws-msk-cluster/releases)
-[![Msk Kafka Cluster](https://circleci.com/gh/angelabad/terraform-aws-msk-cluster.svg?style=shield)](https://app.circleci.com/pipelines/github/angelabad/terraform-aws-msk-cluster)
+
 
 Terraform module which creates [Msk Kafka Cluster](https://aws.amazon.com/msk/) on AWS.
 
@@ -19,7 +18,7 @@ options, etc...
 
 ```hcl
 module "msk-cluster" {
-  source  = "angelabad/msk-cluster/aws"
+  source  = "../msk-cluster/aws"
 
   cluster_name    = "kafka"
   instance_type   = "kafka.t3.small"
