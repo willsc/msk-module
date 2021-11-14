@@ -1,6 +1,8 @@
 locals {
   server_properties = join("\n", [for k, v in var.server_properties : format("%s = %s", k, v)])
   enable_logs       = var.s3_logs_bucket != "" || var.cloudwatch_logs_group != "" || var.firehose_logs_delivery_stream != "" ? ["true"] : []
+  enabled            = true
+  broker_volume_size_max = 1000
 }
 
 terraform {
@@ -99,6 +101,7 @@ resource "aws_msk_configuration" "this" {
 }
 
 resource "aws_msk_cluster" "this" {
+
   depends_on = [aws_msk_configuration.this]
 
   cluster_name           = var.cluster_name
@@ -168,4 +171,34 @@ resource "aws_msk_cluster" "this" {
   }
 
   tags = var.tags
+}
+
+
+resource "aws_appautoscaling_target" "default" {
+  count = local.enabled ? 1 : 0
+
+  max_capacity       = local.broker_volume_size_max
+  min_capacity       = 1
+  resource_id        = aws_msk_cluster.this.arn
+  scalable_dimension = "kafka:broker-storage:VolumeSize"
+  service_namespace  = "kafka"
+}
+
+resource "aws_appautoscaling_policy" "default" {
+  count = local.enabled ? 1 : 0
+
+  name               = "${aws_msk_cluster.this.cluster_name}-broker-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_msk_cluster.this.arn
+  scalable_dimension = join("", aws_appautoscaling_target.default.*.scalable_dimension)
+  service_namespace  = join("", aws_appautoscaling_target.default.*.service_namespace)
+
+  target_tracking_scaling_policy_configuration {
+    disable_scale_in = false
+    predefined_metric_specification {
+      predefined_metric_type = "KafkaBrokerStorageUtilization"
+    }
+
+    target_value = 60
+  }
 }
