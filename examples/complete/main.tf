@@ -27,6 +27,7 @@ resource "aws_cloudwatch_log_group" "test" {
 module "complete" {
   source = "../../"
 
+
   cluster_name    = "complete"
   instance_type   = "kafka.t3.small"
   number_of_nodes = length(data.aws_subnet_ids.default.ids)
